@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>JobShield – Fraudulent Job Posting Detector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+  <!-- App logic -->
+  <script defer src="app.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 2rem; background:#0b1020; color:#f5f5f5; }
+    h1 { margin-bottom: .5rem; }
+    .subtitle { color:#9ca3af; margin-bottom:1.5rem; }
+    .container { max-width: 900px; margin: 0 auto; }
+    textarea { width: 100%; min-height: 140px; padding: .75rem; border-radius: .5rem; border:1px solid #374151; background:#020617; color:#f9fafb; resize: vertical; }
+    label { font-weight: 600; display:block; margin-top:1rem; margin-bottom:.35rem; }
+    .row { display:flex; flex-wrap:wrap; gap:1rem; margin-top:1rem; }
+    .row > div { flex:1 1 260px; }
+    input[type="text"] { width:100%; padding:.5rem .6rem; border-radius:.5rem; border:1px solid #374151; background:#020617; color:#f9fafb; }
+    button { margin-top:1.5rem; padding:.75rem 1.5rem; border-radius:999px; border:none; cursor:pointer;
+             font-weight:600; background:linear-gradient(135deg,#22c55e,#16a34a); color:#022c22; }
+    button:disabled { opacity:.6; cursor:default; }
+    .score-card { margin-top:2rem; padding:1.25rem 1.5rem; border-radius:1rem; background:#020617; border:1px solid #1f2937; }
+    .score-main { font-size:1.25rem; font-weight:700; }
+    .pill { display:inline-flex; align-items:center; padding:.25rem .75rem; border-radius:999px; font-size:.8rem; font-weight:600; margin-left:.75rem; }
+    .pill-safe { background:#022c22; color:#4ade80; }
+    .pill-risk { background:#450a0a; color:#fca5a5; }
+    .pill-med  { background:#1e293b; color:#e5e7eb; }
+    .small { font-size:.85rem; color:#9ca3af; margin-top:.5rem; }
+    .badge { display:inline-block; padding:.15rem .5rem; border-radius:999px; font-size:.7rem; background:#111827; border:1px solid #1f2937; margin-left:.5rem; color:#9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>JobShield</h1>
+    <div class="subtitle">Browser AI for detecting potentially fraudulent job postings.</div>
+
+    <div class="badge">Model: 1D CNN · TFJS</div>
+
+    <form id="job-form">
+      <label for="title">Job title</label>
+      <input id="title" type="text" placeholder="e.g. Marketing Intern" />
+
+      <label for="company">Company profile</label>
+      <textarea id="company" placeholder="Short description of the company"></textarea>
+
+      <label for="description">Job description</label>
+      <textarea id="description" placeholder="Main responsibilities, tasks, context"></textarea>
+
+      <label for="requirements">Requirements</label>
+      <textarea id="requirements" placeholder="Required skills, experience, education"></textarea>
+
+      <label for="benefits">Benefits</label>
+      <textarea id="benefits" placeholder="Salary, benefits, flexibility, etc."></textarea>
+
+      <div class="row">
+        <div>
+          <label for="location">Location (optional)</label>
+          <input id="location" type="text" placeholder="City, Country" />
+        </div>
+        <div>
+          <label for="salary">Salary range (optional)</label>
+          <input id="salary" type="text" placeholder="e.g. 40,000–55,000" />
+        </div>
+        <div>
+          <label for="employment">Employment type (optional)</label>
+          <input id="employment" type="text" placeholder="Full-time, Part-time, Remote..." />
+        </div>
+        <div>
+          <label for="industry">Industry (optional)</label>
+          <input id="industry" type="text" placeholder="e.g. Marketing and Advertising" />
+        </div>
+      </div>
+
+      <button type="submit" id="predict-btn">Get fraud score</button>
+    </form>
+
+    <div id="score-card" class="score-card" style="display:none;">
+      <div class="score-main">
+        Fraud score: <span id="score-value">–</span>
+        <span id="score-label" class="pill pill-safe">Safe</span>
+      </div>
+      <div class="small" id="score-text">
+        Score is the predicted probability that this job posting is fraudulent (0–1).
+      </div>
+    </div>
+
+    <div class="small" style="margin-top:2rem;">
+      This demo runs fully in your browser using a TensorFlow.js model exported from the JobShield training notebook.
+    </div>
+  </div>
+</body>
+</html>
