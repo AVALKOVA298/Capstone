@@ -1,5 +1,5 @@
 // Path to TFJS model folder in your repo
-const MODEL_URL = 'model.json';
+const MODEL_URL = 'jobshieldtfjs/model.json';
 
 // Max sequence length used in training (300 tokens)
 const MAX_LEN = 300;
