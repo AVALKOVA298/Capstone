@@ -4,7 +4,7 @@ let model = null;
 let config = null;
 let edaData = null;
 
-/
+/**
  * Инициализация после загрузки страницы
  */
 document.addEventListener("DOMContentLoaded", async () => {
