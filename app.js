@@ -4,9 +4,7 @@ let model = null;
 let config = null;
 let edaData = null;
 
-/**
- * Инициализация после загрузки страницы
- */
+// Инициализация после загрузки страницы
 document.addEventListener("DOMContentLoaded", async () => {
   setupTabs();
   setupPredictionHandler();
@@ -24,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Error loading config or EDA data:", err);
     const edaDiv = document.getElementById("eda-summary");
     if (edaDiv) {
-      edaDiv.innerHTML = `<p style="color:red;">Failed to load EDA/config data. Check console.</p>`;
+      edaDiv.innerHTML = <p style="color:red;">Failed to load EDA/config data. Check console.</p>;
     }
   }
 
@@ -36,7 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Error loading model:", err);
     const resDiv = document.getElementById("prediction-result");
     if (resDiv) {
-      resDiv.innerHTML = `<p style="color:red;">Failed to load model. Check console.</p>`;
+      resDiv.innerHTML = <p style="color:red;">Failed to load model. Check console.</p>;
     }
   }
 });
@@ -56,7 +54,7 @@ function setupTabs() {
       tabContents.forEach(c => c.classList.remove("active"));
 
       btn.classList.add("active");
-      document.getElementById(tab-${tab}).classList.add("active");
+      document.getElementById(`tab-${tab}`).classList.add("active");
     });
   });
 }
@@ -69,10 +67,10 @@ function setupPredictionHandler() {
   const textarea = document.getElementById("job-text");
   const resultDiv = document.getElementById("prediction-result");
 
-  if (!btn || !textarea || !resultDiv) return;
+  if (!btn  !textarea  !resultDiv) return;
 
   btn.addEventListener("click", async () => {
-    if (!config || !model) {
+    if (!config  !model) {
       resultDiv.textContent = "Model or config is still loading. Please wait...";
       return;
     }
@@ -92,7 +90,7 @@ function setupPredictionHandler() {
       prediction.dispose();
       input.dispose();
 
-      const threshold = config.threshold || 0.5;
+      const threshold = config.threshold  0.5;
       const label = prob >= threshold ? "Fake / Risky" : "Real / Likely legitimate";
 
       resultDiv.innerHTML = `
@@ -101,11 +99,10 @@ function setupPredictionHandler() {
       `;
     } catch (err) {
       console.error("Prediction error:", err);
-      resultDiv.innerHTML = `<p style="color:red;">Prediction failed. Check console.</p>`;
+      resultDiv.innerHTML = <p style="color:red;">Prediction failed. Check console.</p>;
     }
   });
 }
-
 /
  * Предобработка текста под BiLSTM-модель
  * @param {string} text
@@ -117,13 +114,18 @@ function preprocessText(text, cfg) {
   const oovIdx = cfg.oov_index;
   const wordIndex = cfg.word_index;
 
-  // очень простая токенизация: нижний регистр + удаляем всё кроме букв/цифр/пробелов
-  const tokens = text
+  // Простая токенизация:
+  // - к нижнему регистру
+  // - убираем всё, кроме латиницы, цифр, русских букв и пробела
+  const cleaned = text
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
+    .replace(/[^a-z0-9а-яё ]/gi, " ");
+
+  const tokens = cleaned
+    .split(" ")
     .filter(t => t.length > 0);
-  let sequence = tokens.map(w => wordIndex[w]  oovIdx);
+
+  let sequence = tokens.map(w => wordIndex[w] || oovIdx);
 
   // усечение / паддинг
   if (sequence.length > maxLen) {
@@ -136,7 +138,7 @@ function preprocessText(text, cfg) {
   return tf.tensor2d([sequence], [1, maxLen]);
 }
 
-/**
+/
  * Отображение EDA-результатов
  * @param {Object} eda
  */
@@ -144,8 +146,7 @@ function renderEdaSummary(eda) {
   const div = document.getElementById("eda-summary");
   if (!div) return;
 
-  const classCounts = eda.class_counts  {};
-  const lengths = eda.lengths  {};
+  const classCounts = eda.class_counts || {};
   const metrics = eda.metrics  {};
   const cm = eda.confusion_matrix  {};
   const missing = eda.missing  {};
@@ -154,15 +155,17 @@ function renderEdaSummary(eda) {
   const totalFake = classCounts.Fake ?? 0;
   const total = totalReal + totalFake;
 
-  const acc = metrics.accuracy
+  const acc = typeof metrics.accuracy === "number"
     ? (metrics.accuracy * 100).toFixed(2)
     : "–";
 
-  // Метрики по классам, если есть
+  const threshold = typeof metrics.threshold === "number"
+    ? (metrics.threshold * 100).toFixed(1)
+    : "–";
+
   const realMetrics = metrics.real  {};
   const fakeMetrics = metrics.fake  {};
 
-  // Конфьюжн-матрица
   let cmHtml = "";
   if (cm.matrix && cm.labels_true && cm.labels_pred) {
     const m = cm.matrix;
@@ -182,7 +185,7 @@ function renderEdaSummary(eda) {
             <td>${m[0][1]}</td>
           </tr>
           <tr>
-            <th>${cm.labels_true[1]  "True 1"}</th>
+          <th>${cm.labels_true[1]  "True 1"}</th>
             <td>${m[1][0]}</td>
             <td>${m[1][1]}</td>
           </tr>
@@ -191,7 +194,6 @@ function renderEdaSummary(eda) {
     `;
   }
 
-  // Пропуски по столбцам
   let missingHtml = "";
   if (missing.columns && missing.real && missing.fake) {
     missingHtml += `<table class="missing-table">
@@ -217,7 +219,7 @@ function renderEdaSummary(eda) {
         </tr>
       `;
     }
-    missingHtml += </tbody></table>;
+    missingHtml += `</tbody></table>`;
   }
 
   div.innerHTML = `
@@ -227,21 +229,21 @@ function renderEdaSummary(eda) {
        Fake: <b>${totalFake}</b> (${total ? ((totalFake / total) * 100).toFixed(1) : "–"} %)</p>
 
     <h3>Model metrics (validation/test)</h3>
-    <p><b>Accuracy:</b> ${acc} % (threshold = ${(metrics.threshold * 100).toFixed(1)} %)</p>
+    <p><b>Accuracy:</b> ${acc} % (threshold = ${threshold} %)</p>
 
     <details open>
       <summary><b>Per-class metrics</b></summary>
       <p><b>Real</b><br>
-         Precision: ${(realMetrics.precision * 100).toFixed(2)} %<br>
-         Recall: ${(realMetrics.recall * 100).toFixed(2)} %<br>
-         F1: ${(realMetrics.f1 * 100).toFixed(2)} %<br>
-         Support: ${realMetrics.support}
+         Precision: ${realMetrics.precision != null ? (realMetrics.precision * 100).toFixed(2) : "–"} %<br>
+         Recall: ${realMetrics.recall != null ? (realMetrics.recall * 100).toFixed(2) : "–"} %<br>
+         F1: ${realMetrics.f1 != null ? (realMetrics.f1 * 100).toFixed(2) : "–"} %<br>
+         Support: ${realMetrics.support ?? "–"}
       </p>
       <p><b>Fake</b><br>
-         Precision: ${(fakeMetrics.precision * 100).toFixed(2)} %<br>
-         Recall: ${(fakeMetrics.recall * 100).toFixed(2)} %<br>
-         F1: ${(fakeMetrics.f1 * 100).toFixed(2)} %<br>
-         Support: ${fakeMetrics.support}
+         Precision: ${fakeMetrics.precision != null ? (fakeMetrics.precision * 100).toFixed(2) : "–"} %<br>
+         Recall: ${fakeMetrics.recall != null ? (fakeMetrics.recall * 100).toFixed(2) : "–"} %<br>
+         F1: ${fakeMetrics.f1 != null ? (fakeMetrics.f1 * 100).toFixed(2) : "–"} %<br>
+         Support: ${fakeMetrics.support ?? "–"}
       </p>
     </details>
 
@@ -249,6 +251,6 @@ function renderEdaSummary(eda) {
     ${cmHtml  "<p>No confusion matrix data.</p>"}
 
     <h3>Missing values by column</h3>
-    ${missingHtml  "<p>No missing data info.</p>"}
+    ${missingHtml || "<p>No missing data info.</p>"}
   `;
 }
